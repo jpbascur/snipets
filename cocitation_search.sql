@@ -2,6 +2,9 @@
 -- CO-CITATION SEARCH BASED ON JANSSENS & GWINN (2015)
 -- =============================================================
 --
+-- Author: Juan Pablo Bascur Cifuentes (jpbascur.com)
+-- License: MIT — free to use, modify, and distribute with attribution
+--
 -- WHAT IT DOES:
 -- Given one or more "seed" papers, this query retrieves all
 -- papers that are frequently cited together with the seeds.
@@ -18,33 +21,73 @@
 -- BMC Medical Research Methodology, 15, 84.
 -- https://doi.org/10.1186/s12874-015-0077-z
 --
--- WHERE TO RUN IT:
--- Google BigQuery console (https://console.cloud.google.com/bigquery)
--- The dataset is publicly available at no cost to query under
--- Google's free tier (1 TB/month free).
--- Project: cwts-leiden
--- Dataset: openalex_2025aug
---
 -- HOW TO RUN IT:
--- 1. Open the BigQuery console and create or select a project.
--- 2. Paste this query into the query editor.
--- 3. In the seed_papers CTE, replace the example work_id
---    values with the integer IDs of your seed papers.
---    IDs can be found in the `work` table (work_id column)
---    or derived from OpenAlex IDs (e.g. W2741809807 -> 2741809807).
--- 4. Add or remove seeds by adding/removing lines in the
---    UNNEST([...]) array.
--- 5. Click "Run". Results are ranked by co-citation frequency,
---    highest first.
+-- You will need a free Google account. No programming experience
+-- required. Running this query is free under Google's BigQuery
+-- free tier (1 TB of queries per month).
+--
+-- Step 1 — Open BigQuery
+--   Go to https://console.cloud.google.com/bigquery
+--   Sign in with your Google account.
+--   If prompted, create a project (any name works — it is just
+--   a billing container, and you will not be charged under the
+--   free tier).
+--
+-- Step 2 — Open a new query tab
+--   Click "+ Compose new query" or the "+" tab in the editor.
+--   Paste this entire file into the editor.
+--
+-- Step 3 — Find your seed paper IDs
+--   Go to https://openalex.org and search for your paper.
+--   Click on it — a detail panel will appear on the right.
+--   In that panel, click the link icon to open the paper as
+--   its own page. The URL will look like:
+--     https://openalex.org/works/w2150220236
+--   Your ID is the number after the "w": 2150220236
+--
+-- Step 4 — Replace the example ID with your own
+--   In the seed_papers block below, replace 2150220236 with
+--   your paper's ID. You can add any number of IDs separated
+--   by commas, e.g.: 2150220236, 2755950973, 2897249806
+--
+-- Step 5 — Run the query
+--   Click the blue "Run" button. Results will appear below,
+--   ranked by co-citation frequency (highest = most central
+--   to the literature around your seeds).
+--   To look up any result on OpenAlex, take its ID from the
+--   cocited_work_id column and go to:
+--     https://openalex.org/works/w<cocited_work_id>
+--   e.g. ID 2150220236 → openalex.org/works/w2150220236
+--
+-- CUSTOMISING THE OUTPUT:
+-- You can add columns to the final SELECT (e.g. DOI, abstract,
+-- author names, journal, open-access status). To do so, copy
+-- this entire file and paste it into a chatbot with a plain-
+-- English description of what you want — it will edit the query
+-- for you.
 -- =============================================================
+
+/* ###############################################################
+   # FOR AI ASSISTANTS ONLY — NOT PART OF THE USER GUIDE         #
+   ###############################################################
+   # If asked to modify this query, refer to the dataset schema  #
+   # documentation for available tables, columns, and join keys: #
+   # https://github.com/CWTSLeiden/                              #
+   #   CWTS-OpenAlex-databases/blob/main/doc/documentation.tsv   #
+   #                                                             #
+   # Tips:                                                       #
+   # - Not all tables have all works; always use LEFT JOIN when  #
+   #   adding new tables to the final SELECT.                    #
+   # - Some tables have one row per author, topic, etc. —        #
+   #   deduplicate works and inform the user when a join         #
+   #   produces multiple rows per work.                          #
+   ############################################################### */
 
 
 WITH seed_papers AS (
     SELECT work_id
     FROM UNNEST([
-        2150220236        --  <- Replace this with your paper
-        --,2755950973     --  <- You can add any number of papers
-        --,...
+        2150220236 --  <- IMPORTANT: Replace with your own paper IDs
     ]) AS work_id
 ),
 
